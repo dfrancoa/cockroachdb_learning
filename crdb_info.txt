@@ -1,1 +1,84 @@
 --- This file contains information about CockroachDB (CRDB) which I could record ----
+
+-What features are difficult for application developers to implement with traditional SQL databases?
+ - Availability
+ - Scalability
+   Explanation:
+   Traditional SQL databases delivered ACID transactions and joins easily, but scalability and high availability were difficult to implement.
+       --ACID transactions are database operations ensuring reliability and data integrity through four key properties: Atomicity (all-or-nothing), Consistency (valid data states), Isolation (concurrent operations don't interfere), and Durability (committed changes are permanent)
+       When someone says ACID guarantees, they're talking about four promises.
+          -First,  transaction has to be atomic, meaning that all parts of the transaction happen or none.
+          -Second, they have to be consistent, which in this context means the transaction has to respect any rules imposed on the database like foreign key constraints, and move from one consistent state to another with no inconsistent states visible to any readers at any time.
+          -Third, they have to be isolated, meaning that even though the database might be able to parallelize some operations, it can't permit it to look like they're interleaved.
+          -Finally, they have to be durable.
+           When a transaction is committed, it stays committed even in the face of node failure.
+       --Joins are fundamental commands in database management (SQL) that combine rows from two or more tables based on related columns, creating a new, unified result set for querying data that spans multiple tables, like linking customers to their orders.
+
+--- Distributed SQL, must comply with this set of characteristics:
+ - Scale
+ - Consistency
+ - Resiliency
+ - SQL (must use this language)
+
+--- NoSQL vs Legacy SQL
+                   Scale  query by SQL  Consistency  Resiliency
+    NoSQL           Yes      No            No           Yes
+    Legacy SQL      No       Yes           Yes          No
+
+---What Cockroach Delivers:
+   -ACID Transactions
+   -PostgreSQL wire protocol
+   -Geo-replication
+   -Multi-cloud
+   -Advanced admin tools
+   -Optimization
+   -Baked in security
+
+-- These are some of the features of CRDB:
+ - Transactions
+ - Geo-replication
+ - High availability
+ - Scalability
+
+-- CRDB uses serializable isolation level.
+
+------Cluster Concepts ----
+ - Basic Model of Cluster Data: Keyspace
+ - Keyspace is divided into ranges, by default 64MB in size but on version 20.1 this default changed to 512MB
+ - Ranges are units that CockroachDB replicates and distributes to the nodes of the cluster
+ - Replicas = copies of ranges, up to a replication factor
+ - Replication Factor = How many times a range is replicated in a cluster
+ - Replicas distributed among nodes of cluster
+
+------The Raft Protocol in CockroachDB ----
+ - CockroachDB uses the Raft Protocol to perform writes in a distributed and durable manner.
+ - Raft is an algorithm that allows a distributed set of servers to agree on any values without losing the record of that value, even in the face of node failure. CockroachDB uses it to perform all writes.
+
+-Recall that CockroachDB organizes its data into a keyspace, divided into ranges and distributes replicas of each range throughout the cluster based on the replication factor.
+ - For CockroachDB, each range defines a Raft group.
+ - The cluster has seven ranges, so there will be seven raft groups.
+
+-CockroachDB has a concept of something called a lease, which it assigns to one of these replicas called the leaseholder. Its job will be to serve reads on its own bypassing Raft but also keeping track of write commits, so it knows not to show rights until they're durable.
+  1.- Let's put a lease on one of those replicas.
+  2.- Now all reads and writes to the range will be sent to that node.
+
+- Raft. The first thing to know about Raft is that 
+  - replicas are either leaders or followers.
+    - Leaders coordinate the distributed write process while followers assist.
+      If a follower doesn't see a heartbeat from a leader, it'll get a randomized time-out, declare itself a candidate, and call for an election. Majority vote makes it a leader. The process takes seconds.
+  3.- Let's elect a leader.
+      I made the leader the same as the leaseholder, and while they're different roles, in practice, CockroachDB does a good job of keeping the lease with the leader for efficiency. So we'll assume that scenario.
+  4.- Writes are kicked off by the leaseholders which tells the leader to begin the process.
+  5.- Here's an insert.
+  6.- The leader first upends the command to its Raft log, which is an ordered set of commands on disc.
+  7.- The leader then proposes the write to the followers.
+  8.- Each follower will replicate the command on its own Raft log.
+I showed only one replication so far since that's enough for a majority. Even without hitting the third node, the write will persist through any single node failure.
+  9.- Consensus has been achieved, but the leader doesn't know that yet. So the follower has to let it know.
+ 10.- At this point, the leader knows the Raft command was replicated so it can commit the write and notify the leaseholder to begin showing it to readers.
+ 11.- Eventually, that write will go to every replica.
+Let's look at our full cluster with a leader for each range to get a big picture sense of things. Here, each range has one replica. That's its leader and its leaseholder. All sequel operations are routed to the appropriate leaseholders. Reads are returned while writes are passed to the leaders to start building consensus.
+So, what have we learned? We've seen that the leaseholder ensures that readers only see committed writes, and that replicas arranged together form a Raft group that elects one leader.
+We've seen how a distributed consensus is achieved for writes, and that's how Raft works in CockroachDB. 
+
+
