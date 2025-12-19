@@ -94,4 +94,20 @@ We've seen how a distributed consensus is achieved for writes, and that's how Ra
  When it has enough nodes to up-replicate the under-replicated ranges
 
 
+----------Getting a local single node cluster going----------------
+
+ Command:
+ $ cockroach start-single-node --insecure --listen-addr=localhost:26257 --http-addr=localhost:8080
+   --> --insecure ==> no encryption or authentication, not for production!!
+   --> --http-addr=localhost:8080 ==> where we can see the admin UI to get visibility into the cluster
+   --> --listen-addr=localhost:26257 ==> where/what port the node should listen for connections
+ 
+ ---To stop the cluster just hit Ctrl+c
+
+    Another command that also works is:
+    $ cockroach start-single-node --insecure --listen-addr localhost
+
+    This give the exact same result as the previous but assumes default parameters for the ports by only 
+    specifying "localhost"
+
 
