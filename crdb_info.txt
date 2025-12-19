@@ -81,4 +81,17 @@ Let's look at our full cluster with a leader for each range to get a big picture
 So, what have we learned? We've seen that the leaseholder ensures that readers only see committed writes, and that replicas arranged together form a Raft group that elects one leader.
 We've seen how a distributed consensus is achieved for writes, and that's how Raft works in CockroachDB. 
 
+ In a Raft group, how many copies of a Raft Log entry must exist for a write to be committed?
+ Enough to be on a majority of the Raft group
+
+ What happens when a single node goes down?
+ Leaseholders, if present on a node, will move.
+
+ 
+--Resiliency in Large Clusters --
+
+ When can a cluster heal its way out of a fragile state (one with under-replicated ranges)?
+ When it has enough nodes to up-replicate the under-replicated ranges
+
+
 
