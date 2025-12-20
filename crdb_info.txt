@@ -110,4 +110,68 @@ We've seen how a distributed consensus is achieved for writes, and that's how Ra
     This give the exact same result as the previous but assumes default parameters for the ports by only 
     specifying "localhost"
 
+-----------Use SQL Shell to create and modify Tables-------------
 
+ > Connect to cluster using SQL shell:
+ 
+   $ cockroach sql --insecure
+    This connects to the cluster in the local host that was created
+
+ > Some SQL commands that are usefull for manipulating and going through the cluster
+   
+   Example of how the prompt will look like inthe SQL shell:
+
+         root@localhost:26257/defaultdb>
+   
+   This means you are logged in as root and connecting through the localhost on port 26257 
+   and on the defaultdb database.
+
+   >> SHOW DATABASES;  ---> Showw all the databases in the cluster
+    Ex.
+
+root@localhost:26257/defaultdb> SHOW DATABASES;                                             
+  database_name | owner | primary_region | secondary_region | regions | survival_goal
+----------------+-------+----------------+------------------+---------+----------------
+  defaultdb     | root  | NULL           | NULL             | {}      | NULL
+  postgres      | root  | NULL           | NULL             | {}      | NULL
+  system        | node  | NULL           | NULL             | {}      | NULL
+(3 rows)
+
+Time: 6ms total (execution 5ms / network 0ms)
+
+
+    
+    >> CREATE DATABASE <database name>;  ---> create a new database 
+    Ex.
+
+root@localhost:26257/defaultdb> CREATE DATABASE crdb_uni;                                   
+CREATE DATABASE
+
+Time: 86ms total (execution 80ms / network 6ms)
+
+root@localhost:26257/defaultdb> SHOW DATABASES;                                             
+  database_name | owner | primary_region | secondary_region | regions | survival_goal
+----------------+-------+----------------+------------------+---------+----------------
+  crdb_uni      | root  | NULL           | NULL             | {}      | NULL
+  defaultdb     | root  | NULL           | NULL             | {}      | NULL
+  postgres      | root  | NULL           | NULL             | {}      | NULL
+  system        | node  | NULL           | NULL             | {}      | NULL
+(4 rows)
+
+
+   >> SET database = <database name>; ------> change into another database
+   Ex.
+
+root@localhost:26257/defaultdb> SET database = crdb_uni;                                    
+SET
+
+Time: 2ms total (execution 1ms / network 1ms)
+
+root@localhost:26257/crdb_uni>        
+
+   >> CREATE TABLE students (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name STRING);
+SHOW CREATE students;
+CREATE TABLE courses (sys_id UUID DEFAULT gen_random_uuid(), course_id INT, name STRING, PRIMARY KEY (sys_id, course_id));
+SHOW CREATE TABLE courses;
+ALTER TABLE courses ADD COLUMN schedule STRING;
+SHOW CREATE TABLE courses;
