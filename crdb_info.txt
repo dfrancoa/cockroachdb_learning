@@ -170,7 +170,18 @@ Time: 2ms total (execution 1ms / network 1ms)
 root@localhost:26257/crdb_uni>        
 
    >> CREATE TABLE students (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name STRING);
-SHOW CREATE students;
+      This creates a table with two columns id and name.
+      The id column needs to have certain properties:
+        - UUID. The values on the id column need to be the univarsally unique identifier data
+          type,
+          or UUID
+        - PRIMARY KEY. This column is the PRIMARY KEY for the table, which specifies the 
+          values must uniquely idenfy each row. The columns in the PRIMARY KEY constraint are
+          used to create its primary index, which CockroachDB uses, by default, to access the           table's data.
+        - DEFAULT gen_random_uuid(). Specify that if the value is not provided for a row's ID,
+          the default value is an an auto-generated random UUID.
+   >> SHOW CREATE students;  ---> this shows the schema and properties of the table
+   >>
 CREATE TABLE courses (sys_id UUID DEFAULT gen_random_uuid(), course_id INT, name STRING, PRIMARY KEY (sys_id, course_id));
 SHOW CREATE TABLE courses;
 ALTER TABLE courses ADD COLUMN schedule STRING;
