@@ -406,7 +406,11 @@ $ cockroach start --insecure --locality=country=us,region=us-east --store=node1 
 Locality flag:
 --locality=country=us,region=us-east
 
+CockroachDB attempts to spread replicas evenly across the cluster based on locality with the order determining the priority. While this helps with resiliency, 
+it doesn't address latency in a geographically distributed cluster.
+
 An example of a cluster with multiple nodes with multiple locations, commands are as follow:
+
 $ cockroach start --insecure --locality=country=us,region=us-east --store=node1 --listen-addr=localhost:26257 --http-addr=localhost:8080 --join=localhost:26257,localhost:26258,localhost:26259 --background
 
 $ cockroach start --insecure --locality=country=us,region=us-east --store=node2 --listen-addr=localhost:26258 --http-addr=localhost:8081 --join=localhost:26257,localhost:26258,localhost:26259 --background
