@@ -149,7 +149,27 @@ CREATE DATABASE
 
 Time: 86ms total (execution 80ms / network 6ms)
 
-root@localhost:26257/defaultdb> SHOW DATABASES;                                             
+root@localhost:26257/defaultdb> SHOW DATABASES;
+  database_name | owner | primary_region | secondary_region | regions | survival_goal
+----------------+-------+----------------+------------------+---------+----------------
+  defaultdb     | root  | NULL           | NULL             | {}      | NULL
+  postgres      | root  | NULL           | NULL             | {}      | NULL
+  system        | node  | NULL           | NULL             | {}      | NULL
+(3 rows)
+
+Time: 6ms total (execution 5ms / network 0ms)
+
+
+
+    >> CREATE DATABASE <database name>;  ---> create a new database
+    Ex.
+
+root@localhost:26257/defaultdb> CREATE DATABASE crdb_uni;
+CREATE DATABASE
+
+Time: 86ms total (execution 80ms / network 6ms)
+
+root@localhost:26257/defaultdb> SHOW DATABASES;
   database_name | owner | primary_region | secondary_region | regions | survival_goal
 ----------------+-------+----------------+------------------+---------+----------------
   crdb_uni      | root  | NULL           | NULL             | {}      | NULL
@@ -157,7 +177,6 @@ root@localhost:26257/defaultdb> SHOW DATABASES;
   postgres      | root  | NULL           | NULL             | {}      | NULL
   system        | node  | NULL           | NULL             | {}      | NULL
 (4 rows)
-
 
    >> SET database = <database name>; ------> change into another database
    Ex.
@@ -169,20 +188,126 @@ Time: 2ms total (execution 1ms / network 1ms)
 
 root@localhost:26257/crdb_uni>        
 
+   >> SHOW TABLES <database>; ------> This will show the tables in a spacific database
+   Ex.
+
+root@localhost:26257/defaultdb> SHOW TABLES FROM movr;
+  schema_name |         table_name         | type  | owner | estimated_row_count | locality
+--------------+----------------------------+-------+-------+---------------------+-----------
+  public      | promo_codes                | table | root  |                1000 | NULL
+  public      | rides                      | table | root  |                 500 | NULL
+  public      | user_promo_codes           | table | root  |                   5 | NULL
+  public      | users                      | table | root  |                  50 | NULL
+  public      | vehicle_location_histories | table | root  |                1000 | NULL
+  public      | vehicles                   | table | root  |                  15 | NULL
+(6 rows)
+
+Time: 38ms total (execution 38ms / network 0ms)
+
+   >> SELECT * FROM <database.table> LIMIT 10; -------> This will show contents of a table limiting to 10 rows, the amount of rows can be set to any number
+   Ex.
+root@localhost:26257/defaultdb> SELECT * FROM movr.users LIMIT 10;
+                   id                  |   city    |         name         |            address            | credit_card
+---------------------------------------+-----------+----------------------+-------------------------------+--------------
+  ae147ae1-47ae-4800-8000-000000000022 | amsterdam | Chad Sanchez         | 89287 Erica Inlet Apt. 93     |  3693084989
+  b3333333-3333-4000-8000-000000000023 | amsterdam | Teresa Dougherty DVM | 99126 Lam Ridges Suite 50     |  5916323763
+  b851eb85-1eb8-4000-8000-000000000024 | amsterdam | Christina Brown      | 80522 John Pass Suite 7       |  1532468377
+  bd70a3d7-0a3d-4000-8000-000000000025 | amsterdam | Angel Gaines         | 15540 Keith Parks Suite 32    |  1747410307
+  c28f5c28-f5c2-4000-8000-000000000026 | amsterdam | Tara Stewart         | 52035 Ronald Island Apt. 53   |  1730210281
+  1eb851eb-851e-4800-8000-000000000006 | boston    | Teresa Scott         | 17644 Stephanie Manor Apt. 20 |  6948766915
+  23d70a3d-70a3-4800-8000-000000000007 | boston    | Karen Mueller        | 11569 Jeremy Turnpike Apt. 57 |  3085984379
+  28f5c28f-5c28-4600-8000-000000000008 | boston    | Andrew Stout         | 38714 Davis Path              |  4686866258
+  2e147ae1-47ae-4400-8000-000000000009 | boston    | Jennifer Martinez    | 67021 Mary Extensions         |  3479985048
+  33333333-3333-4400-8000-00000000000a | boston    | Teresa Washington    | 47989 David Station           |  0036139633
+(10 rows)
+
+Time: 4ms total (execution 3ms / network 1ms)
+
+
    >> CREATE TABLE students (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name STRING);
       This creates a table with two columns id and name.
       The id column needs to have certain properties:
         - UUID. The values on the id column need to be the univarsally unique identifier data
-          type,
-          or UUID
-        - PRIMARY KEY. This column is the PRIMARY KEY for the table, which specifies the 
+          type,or UUID.
+        - PRIMARY KEY. This column is the PRIMARY KEY for the table, which specifies the
           values must uniquely idenfy each row. The columns in the PRIMARY KEY constraint are
-          used to create its primary index, which CockroachDB uses, by default, to access the           table's data.
+          used to create its primary index, which CockroachDB uses, by default, to access the
+          table's data.
         - DEFAULT gen_random_uuid(). Specify that if the value is not provided for a row's ID,
           the default value is an an auto-generated random UUID.
+      Ex.
+root@localhost:26257/defaultdb> CREATE TABLE students (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name STRING);
+
+CREATE TABLE
+
+Time: 43ms total (execution 21ms / network 22ms)
+
+     Note that this created the table in "defaultdb"
+
+root@localhost:26257/defaultdb> SELECT * FROM defaultdb.students LIMIT 10;
+  id | name
+-----+-------
+(0 rows)
+
+Time: 3ms total (execution 2ms / network 1ms)
+
+     Note that the table is empty at the moment.
+
    >> SHOW CREATE students;  ---> this shows the schema and properties of the table
-   >>
-CREATE TABLE courses (sys_id UUID DEFAULT gen_random_uuid(), course_id INT, name STRING, PRIMARY KEY (sys_id, course_id));
-SHOW CREATE TABLE courses;
-ALTER TABLE courses ADD COLUMN schedule STRING;
-SHOW CREATE TABLE courses;
+      Ex.
+root@localhost:26257/defaultdb> SHOW CREATE students;
+  table_name |                 create_statement
+-------------+----------------------------------------------------
+  students   | CREATE TABLE public.students (
+             |     id UUID NOT NULL DEFAULT gen_random_uuid(),
+             |     name STRING NULL,
+             |     CONSTRAINT students_pkey PRIMARY KEY (id ASC)
+             | );
+(1 row)
+
+Time: 23ms total (execution 22ms / network 0ms)
+
+
+   >> CREATE TABLE courses (sys_id UUID DEFAULT gen_random_uuid(), course_id INT, name STRING, PRIMARY KEY (sys_id, course_id));
+      Ex.
+root@localhost:26257/defaultdb> CREATE TABLE courses (sys_id UUID DEFAULT gen_random_uuid(), course_id INT, name STRING, PRIMARY KEY (sys_id, course_id));
+CREATE TABLE
+
+Time: 42ms total (execution 19ms / network 22ms)
+
+root@localhost:26257/defaultdb> SHOW CREATE courses;
+  table_name |                          create_statement
+-------------+----------------------------------------------------------------------
+  courses    | CREATE TABLE public.cousers (
+             |     sys_id UUID NOT NULL DEFAULT gen_random_uuid(),
+             |     course_id INT8 NOT NULL,
+             |     name STRING NULL,
+             |     CONSTRAINT cousers_pkey PRIMARY KEY (sys_id ASC, course_id ASC)
+             | );
+(1 row)
+
+Time: 21ms total (execution 20ms / network 1ms)
+
+
+    >> ALTER TABLE <table to alter> ADD COLUMN <name of new column> STRING; ----> this is to alter a table and in thid case adds a new column
+       Ex.
+root@localhost:26257/defaultdb> ALTER TABLE courses ADD COLUMN schedule STRING;
+ALTER TABLE
+
+Time: 368ms total (execution 367ms / network 1ms)
+
+   >> SHOW CREATE TABLE <Table name>; -------> this will show the schema and properties of the table in question.
+      Ex.
+root@localhost:26257/defaultdb> SHOW CREATE TABLE courses;
+  table_name |                          create_statement
+-------------+----------------------------------------------------------------------
+  courses    | CREATE TABLE public.courses (
+             |     sys_id UUID NOT NULL DEFAULT gen_random_uuid(),
+             |     course_id INT8 NOT NULL,
+             |     name STRING NULL,
+             |     schedule STRING NULL,
+             |     CONSTRAINT courses_pkey PRIMARY KEY (sys_id ASC, course_id ASC)
+             | );
+(1 row)
+
+Time: 15ms total (execution 15ms / network 0ms)
