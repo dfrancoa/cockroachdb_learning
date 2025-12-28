@@ -311,3 +311,77 @@ root@localhost:26257/defaultdb> SHOW CREATE TABLE courses;
 (1 row)
 
 Time: 15ms total (execution 15ms / network 0ms)
+
+-----To spin up a multiple node cluster in local -----------
+
+The command for fisrt node:
+$ cockroach start --insecure --listen-addr=localhost:26257 --join=localhost:26257,localhost:26258,localhost:26259 --http-addr=localhost:8080 --store=cockroach-data-1 --background
+
+Take note on the following:
+--listen-addr=localhost:26257 -----> what port is this node going to use, each node will have its own port number
+--join=localhost:26257,localhost:26258,localhost:26259   ---------> where is the node going to find the other nodes, if there are more nodes they will have to be added here
+--http-addr=localhost:8080 ---------> port of the UI that the node is going to use to communicate to it. Each node will have its own port number.
+--store=cockroach-data-1 ---------> directory where the node is going to keep its info on, each node will have it own directory. 
+--background -----------> this makes the cluster to run in the background and we can use the terminal where we started the cluster.
+
+Some of these port number are going t chenge to match the nodes that are going to be created.
+
+Running the command will look like this:
+Ex. Node 1
+$ cockroach start --insecure --listen-addr=localhost:26257 \
+>   --join=localhost:26257,localhost:26258,localhost:26259 \
+>   --http-addr=localhost:8080 --store=cockroach-data-1 --background
+*
+* WARNING: ALL SECURITY CONTROLS HAVE BEEN DISABLED!
+*
+* This mode is intended for non-production testing only.
+*
+* In this mode:
+* - Your cluster is open to any client that can access localhost.
+* - Intruders with access to your machine or network can observe client-server traffic.
+* - Intruders can log in without password and read or write any data in the cluster.
+* - Intruders can consume all your server's resources and cause unavailability.
+*
+*
+* INFO: To start a secure server without mandating TLS for clients,
+* consider --accept-sql-without-tls instead. For other options, see:
+*
+* - https://go.crdb.dev/issue-v/53404/v25.4
+* - https://www.cockroachlabs.com/docs/v25.4/secure-a-cluster.html
+*
+*
+* WARNING: Running a server without --sql-addr, with a combined RPC/SQL listener, is deprecated.
+* This feature will be removed in a later version of CockroachDB.
+*
+*
+* INFO: initial startup completed.
+* Node will now attempt to join a running cluster, or wait for `cockroach init`.
+* Client connections will be accepted after this completes successfully.
+* Check the log file(s) for progress.
+
+
+To create the other nodes just create each node with the same command with the porper changes.
+Ex. Node 2:
+$ cockroach start --insecure --listen-addr=localhost:26258   --join=localhost:26257,localhost:26258,localhost:26259   --http-addr=localhost:8081 --store=cockroach-data-2 --background
+
+Ex. Node 3:
+$ cockroach start --insecure --listen-addr=localhost:26259   --join=localhost:26257,localhost:26258,localhost:26259   --http-addr=localhost:8082 --store=cockroach-data-3 --background
+
+Ex. Node 4:
+$ cockroach start --insecure --listen-addr=localhost:26260 --join=localhost:26257,localhost:26258,localhost:26259,localhost:26260,localhost:26261 --http-addr=localhost:8083 --store=cockroach-data-4 --background
+
+Ex. Node 5:
+$ cockroach start --insecure --listen-addr=localhost:26261 --join=localhost:26257,localhost:26258,localhost:26259,localhost:26260,localhost:26261 --http-addr=localhost:8084 --store=cockroach-data-5 --background
+
+
+After you have created all nodes you need to initalize the cluster with the following command:
+
+$ cockroach init --host localhost:26258 --insecure
+
+
+To open from the terminal the UI you can run the following command:
+
+$ open http://localhost:8080
+
+
+
