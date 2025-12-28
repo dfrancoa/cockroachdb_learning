@@ -385,3 +385,15 @@ $ open http://localhost:8080
 
 
 
+------------Fault Tolerance and Automated Recovery---------------------
+
+---- Connection string ------------
+Why does the connection string begin with postgresql?
+SQL queries reach your cluster through the PostgreSQL wire protocol. This makes connecting your application to the cluster simple by supporting many PostgreSQL-compatible drivers and ORMs.
+
+----- When a Node is Down  ----------
+What first occurs automatically when a node is suspected of being down?
+By default, the cluster waits 5 minutes before considering the node dead.
+
+
+
